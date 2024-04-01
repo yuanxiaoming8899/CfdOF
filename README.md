@@ -1,309 +1,189 @@
-# CfdOF: A Computational fluid dynamics (CFD) workbench for FreeCAD
-
-This workbench aims to help users set up and run CFD analyses within the [FreeCAD](https://freecadweb.org)
-modeller, and serves as a front-end (GUI) for the popular OpenFOAM® CFD toolkit (www.openfoam.org, www.openfoam.com).
-It guides the user in selecting the relevant physics, specifying the material properties, generating a mesh, assigning
-boundary conditions and choosing the solver settings before running the simulation. Best practices are specified to
-maximise the stability of the solvers.
-
-![screenshot](Doc/Resources/boiler.png)
-
-Disclaimer:
-This offering is not approved or endorsed by OpenCFD Limited, producer and distributor of the OpenFOAM software via
-www.openfoam.com, and owner of the OPENFOAM® and OpenCFD® trade marks
-
-## Features
-
-### Current:
-
-#### Flow physics
-* Incompressible, laminar flow (simpleFoam, pimpleFoam)
-* Support for various RANS, LES and DES turbulent flow models
-* Incompressible free-surface flow (interFoam, multiphaseInterFoam)
-* Compressible buoyant flow (buoyantSimpleFoam, buoyantPimpleFoam)
-* High-speed compressible flow ([HiSA](https://hisa.gitlab.io))
-* Porous regions and porous baffles
-* Basic material database
-* Flow initialisation with a potential solver
-* Solution of arbitrary passive scalar transport functions
-#### Meshing
-* Cut-cell Cartesian meshing with boundary layers (cfMesh)
-* Cut-cell Cartesian meshing with baffles (snappyHexMesh)
-* Tetrahedral meshing using Gmsh, including conversion to polyhedral dual mesh
-* Post-meshing check mesh
-* Support for dynamic mesh adaptation for supported solvers
-#### Post-processing and monitoring
-* Postprocessing using Paraview
-* Basic support for force-based function objects (Forces, Force Coefficients)
-* Basic support for probes
-#### Other features
-* Runs on Windows 7-11 and Linux
-* Unit/regression testing
-* Case builder using an extensible template structure
-* Macro scripting
-* Support for distributed parallel (cluster) runs via mpiexec & --hostfile
-
-### Platforms supported
-
-#### Linux
-
-Any system on which FreeCAD and the prerequisites listed below can be installed.
-
-#### Windows
-
-Windows 7-11; 64-bit version is required.
-
-#### macOS
-
-Not widely tested, but success has been reported. See
-[the following forum post](https://forum.freecadweb.org/viewtopic.php?f=37&t=63782&p=547611#p547578)
-for instructions.
-
-## Getting started
-
-### Prerequisites
-
-The CfdOF workbench depends on the following external software, some of
-which can be automatically installed (see below for instructions).
-
-- [Latest release version of FreeCAD (at least version 0.20.0 / git commit 29177)](https://www.freecadweb.org/downloads.php)
- or [latest development version (prerelease)](https://github.com/FreeCAD/FreeCAD-Bundle/releases/tag/weekly-builds)
-- OpenFOAM [Foundation versions 9-10](http://openfoam.org/download/) or [ESI-OpenCFD versions 2006-2306](http://openfoam.com/download)
-- [Paraview](http://www.paraview.org/)
-- [cfMesh (customised version updated to compile with latest OpenFOAM versions)](https://sourceforge.net/projects/cfmesh-cfdof/)
-- [HiSA (High Speed Aerodynamic Solver)](https://hisa.gitlab.io)
-- [Gmsh (version 2.13 or later)](http://gmsh.info/) - optional, for generating tetrahedral meshes
-
-### Setting up the CfdOF workbench
-
-#### Windows
-
-The latest
-[release](https://www.freecadweb.org/downloads.php)
-or [development](https://github.com/FreeCAD/FreeCAD-Bundle/releases/tag/weekly-builds)
-FreeCAD build can be obtained (64 bit version) and installed
-by respectively running the installer or extracting the .7z archive to a directory
-\<FreeCAD-directory\>. In the latter case, FreeCAD can be run in place
-(\<FreeCAD-directory\>\bin\FreeCAD.exe).
-
-CfdOF itself is installed into FreeCAD using the Addon manager:
-
-* Run FreeCAD
-* Select Tools | Addon manager ...
-* Select CfdOF in the list of workbenches, and click "Install/update"
-* Restart FreeCAD
-* For installation of dependencies, see below
-
-Note: The CfdOF workbench can be updated at any time through the Addon manager.
-
-##### Dependency installation
-
-Dependencies can be checked and installed conveniently from the CfdOF Preferences panel in FreeCAD.
-In the FreeCAD window, select Edit | Preferences ... and choose "CfdOF".  The dependencies can be installed as
-individual components or as part of a docker container (refer to the **Docker container install** section below).
-
-The OpenFOAM installation is via the
-[OpenCFD MinGW package](https://www.openfoam.com/download/install-binary-windows-mingw.php), and
-the [BlueCFD Core](https://bluecfd.github.io/Core/) port of OpenFOAM is also supported.
-
-OpenFOAM can be installed manually using the above links, or by clicking the relevant
-button in the Preferences panel described above. If you experience problems running OpenFOAM in CfdOF, please make
-sure you have a working installation by following instructions on the relevant websites.
-
-To interface correctly with the OpenFOAM installation, CfdOF needs to be able to write to its
-install location.
-Some users experience problems using a location inside C:\Program Files due to restrictions
-imposed by Windows User Account Control. It is therefore suggested to install to an alternative
-location, preferably in your home directory.
-
-If OpenFOAM is installed with administrator privileges using the above packages, then Microsoft MPI
-will also optionally be installed. If not, then it will be necessary to download and
-install it manually from [here](https://learn.microsoft.com/en-us/message-passing-interface/microsoft-mpi#ms-mpi-downloads).
-MPI is needed in order to run in parallel.
-
-Set the OpenFOAM install directory in the preferences
-panel to the install directory ending in the 'vXXXX' subfolder (where XXXX is the version number installed)
-for the MinGW package, or the BlueCFD install directory.
- It will be automatically detected in the default install
-locations.
-
-Any version of [ParaView](https://www.paraview.org/download/) can be installed,
-by following the above link or clicking the relevant button in the Preferences panel.
-Set the ParaView install path in the preferences panel to the 'paraview.exe' file in the 'bin'
-subfolder of the ParaView installation. Common defaults will be detected if it is left blank.
-
-Likewise, cfMesh and HiSA can be installed from the Preferences panel. Do not close
-it until the 'Install completed' message is received.
-Note that the OpenFOAM installation must be in a writable location
-for cfMesh and HiSA to be installed successfully.
-
-Choosing the "Check dependencies" option will verify that all
-prerequisites have been successfully installed.
-
-#### Linux
-
-AppImages of the latest [release](https://www.freecadweb.org/downloads.php)
-or [development](https://github.com/FreeCAD/FreeCAD-Bundle/releases/tag/weekly-builds)
-versions of FreeCAD can be downloaded and run directly
-without installation. Note that you will
-have to enable execution permission on the downloaded file to run it.
-Otherwise, FreeCAD can be built
-from the source code at https://github.com/FreeCAD/FreeCAD .
-
-Note:
-* Installations of FreeCAD via Linux package managers
-make use of your local Python installation. Therefore you might need to install additional
-Python packages to get full functionality. The dependency checker (see below) can help to diagnose
-this.
-* Note that the 'Snap' container installed through some distributions' package managers
-can be problematic as it does not allow access to system
-directories, and therefore OpenFOAM has to be installed in the user's home directory
-to be runnable from FreeCAD.
-
-For the reasons above we recommend the AppImage as the most robust installation
-option on Linux.
-
-CfdOF itself is installed into FreeCAD using the Addon manager:
-
-* Run FreeCAD
-* Select Tools | Addon manager ...
-* Select CfdOF in the list of workbenches, and click "Install/update"
-* Restart FreeCAD
-* For installation of dependencies, see below
-
-Note: The CfdOF workbench can be updated at any time through the Addon manager.
-
-##### Dependency installation
-
-Dependencies can be checked and some of them installed
-conveniently from the CFD Preferences panel in FreeCAD.
-In the FreeCAD window, select Edit | Preferences ... and
-choose "CfdOF".
-
-The dependencies can be installed manually, or as part of a docker container (refer to Docker container install below). Manual
-installation may be undertaken for OpenFOAM ([OpenCFD](https://openfoam.com/download) or [Foundation](https://openfoam.org/download/)
-versions), [Paraview](http://www.paraview.org/) and [Gmsh](http://gmsh.info/) (optional) by using the links above or your distribution's package
-manager. Note, however, that the OpenFOAM packages bundled in
-some Linux distributions may be out of date or incomplete; for example,
-the standard Debian and Ubuntu packages do not include the build command 'wmake'
-and therefore cannot be used with the optional components 'HiSA' and 'cfMesh'.
-We therefore recommend installation of the packages supplied through
-the official websites above. Please make sure the install the 'development'
-package where available (usually named with the suffix '-devel' or '-dev') to 
-be sure that the optional components 'HiSA' and 'cfMesh' can be compiled
-with 'wmake'.
-
-Set the OpenFOAM install directory in the preferences
-panel - examples of typical install locations are /usr/lib/openfoam/openfoam2306,
-/opt/openfoam10 or /home/user/OpenFOAM/OpenFOAM-10.x (it will be automatically
-detected in common default install
-locations). Note that if you have loaded the desired OpenFOAM
-environment already before starting FreeCAD, the install directory should be left blank.
-
-cfMesh and HiSA can be installed using the Preferences panel described above,
-and can be downloaded and built from their source
-code inside your OpenFOAM installation if you have
-not already done so yourself. Note that this is a lengthy process.
-
-Choosing the "Check dependencies" option will verify that all
-prerequisites have been successfully installed.
-
-#### Docker container install
-
-Docker containers offer a convenient way of providing pre-compiled program packages for both windows and linux. macOS can also be supported but
-assistance will be required to setup a container.  Please leave a message on the [forum](https://forum.freecadweb.org/viewforum.php?f=37).
-
-##### Docker on Windows
-
-The preferred docker run-time for Windows is via [podman](https://podman.io/) as currently this provides fast filesystem integration.
-[Docker Desktop](https://www.docker.com/products/docker-desktop/) may also be used.
-
-1. Install [podman](https://github.com/containers/podman/releases/download/v4.2.1/podman-v4.2.1.msi) (or [docker desktop](https://www.docker.com/products/docker-desktop/)).
-2. If using podman, open a cmd window and issue the following commands:
-   * `podman machine init`
-   * `podman machine start`
-   * `podman machine set --rootful`
-3. Edit &rarr; Preferences &rarr; CfdOF: Press the _Install Paraview_ button.
-4. Edit &rarr; Preferences &rarr; CfdOF: Select _Use docker_.
-5. Press the _Install Docker Container_ button. There is no need to install gmsh, cfmesh and HISA as they are included in the docker image.
-6. If using podman, fast WSL file system integration can be enabled:
-   * Create a new subdirectory (for example `cfdof`) in the following firectory created by podman:
-   `\\wsl$\podman-machine-default\home\user`
-   * In the cfdof preference page, set the default output directory as above:
-   `\\wsl$\podman-machine-default\home\user\cfdof`
-7. Press the _Run dependency checker_ button.
-
-##### Docker on Linux
-1. Install docker using these [instructions](https://www.linuxtechi.com/install-docker-engine-on-debian/) (or similar).
-2. Install paraview as per the package installation instructions for your distribution
-   (for example `sudo apt-get install paraview` on debian).
-3. Edit &rarr; Preferences &rarr; CfdOF: Select _Use docker_.
-4. Press the _Install Docker Container_ button. There is no need to install gmsh, cfmesh and HISA as they are included in the docker image.
-5. Press the _Run dependency checker_ button.
-
-## Documentation
-
-At present there is no formal documentation for CfdOF apart from this README.
-However, demonstration cases
-are provided inside the 'Demos' folder of the
-[CfdOF workbench directory](https://github.com/jaheyns/cfdof). These aim
-to provide a basic overview of features and best practices. The examples are run
-by loading and executing the macro files ending in '.FCMacro' in the various sub-directories
-in the 'Demos' directory. Where there are several numbered files, these should be run in order
-and aim to demonstrate step-by-step how the case is set up.
-
-Community assistance may be sought at the
-[CfdOF dedicated FreeCAD forum](https://forum.freecadweb.org/viewforum.php?f=37),
-and a list of various third-party documentation is available in
-[the following forum post](https://forum.freecadweb.org/viewtopic.php?f=37&t=33492#p280359).
-
-### FAQ
-
-Q: Do I have to create a watertight geometry?
-
-A: This isn't necessary if using the cartesian mesh generators _snappyHexMesh_ and _cfMesh_.
-You can make use of shells and compounds instead of creating solids, as long as the
-collection of shapes in the compound being meshed blocks off the volume desired.
-Gaps smaller than the mesh spacing are also allowed.
-
-## Feedback
-
-### Reporting Bugs
-
-Please discuss issues on the [CfdOF FreeCAD forum](https://forum.freecadweb.org/viewforum.php?f=37)
-for community assistance.
-Bugs can be reported on the [Github project site](https://github.com/jaheyns/cfdof).
-
-Please first read the [guidelines for reporting bugs](https://forum.freecadweb.org/viewtopic.php?f=37&t=33492#p280359)
-in order to provide sufficient information.
-
-## Development
-
-If you would like to get involved in the development of CfdOF, please refer to the [Contribution guidelines](CONTRIBUTING.md)
-and [Roadmap](ROADMAP.md).
-
-## Acknowledgements
-
-### Funding
-
-This development was made possible through initial funding from [Eskom Holdings SOC Ltd](http://www.eskom.co.za)
-and the [Council for Scientific and Industrial Research](https://www.csir.co.za) (South Africa).
-
-### Contributors
-
-* Oliver Oxtoby (CSIR, 2016-2018; private 2019-) <oliveroxtoby@gmail.com>
-* Johan Heyns (CSIR, 2016-2018) <jaheyns@gmail.com>
-* Alfred Bogaers (CSIR, 2016-2018) <alfredbogaers@gmail.com>
-* Jonathan Bergh (2022)
-* Qingfeng Xia (2015)
-* Thomas Schrader (2017-) <info@schraderundschrader.de>
-* Michael Hindley (2016)
-* Mark Mackenzie (CNF, 2022)
-* Katy Akmal (2022) [Forum: @KAKM]
-* Adrian Insaurralde (2022)
-* Klaus Sembritzki (2017)
-
-### Dedication
-
-CfdOF is dedicated to the memory of Michael Hindley. It is thanks to his irrepressible enthusiasm for
-FreeCAD and open source software that this workbench exists. Rest in peace.
+<div class="Box-sc-g0xbh4-0 bJMeLZ js-snippet-clipboard-copy-unpositioned" data-hpc="true"><article class="markdown-body entry-content container-lg" itemprop="text"><div class="markdown-heading" dir="auto"><h1 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">CfdOF：FreeCAD 的计算流体动力学 (CFD) 工作台</font></font></h1><a id="user-content-cfdof-a-computational-fluid-dynamics-cfd-workbench-for-freecad" class="anchor" aria-label="永久链接：CfdOF：FreeCAD 的计算流体动力学 (CFD) 工作台" href="#cfdof-a-computational-fluid-dynamics-cfd-workbench-for-freecad"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"></font><a href="https://freecadweb.org" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">该工作台旨在帮助用户在FreeCAD</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">建模器中设置和运行 CFD 分析，并用作流行的 OpenFOAM® CFD 工具包（ </font></font><a href="http://www.openfoam.org" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">www.openfoam.org</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">、</font></font><a href="http://www.openfoam.com" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">www.openfoam.com</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;"> ）
+的前端 (GUI) </font><font style="vertical-align: inherit;">。它指导用户在运行模拟之前选择相关物理场、指定材料属性、生成网格、分配边界条件并选择解算器设置。指定最佳实践以最大限度地提高求解器的稳定性。</font></font></p>
+<p dir="auto"><a target="_blank" rel="noopener noreferrer" href="/jaheyns/CfdOF/blob/master/Doc/Resources/boiler.png"><img src="/jaheyns/CfdOF/raw/master/Doc/Resources/boiler.png" alt="截屏" style="max-width: 100%;"></a></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">免责声明：本产品未经 OpenCFD Limited（OpenFOAM 软件的生产商和分销商（通过
+</font></font><a href="http://www.openfoam.com" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">www.openfoam.com</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">）以及 OPENFOAM® 和 OpenCFD® 商标的所有者）批准或认可</font></font></p>
+<div class="markdown-heading" dir="auto"><h2 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">特征</font></font></h2><a id="user-content-features" class="anchor" aria-label="永久链接：特点" href="#features"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<div class="markdown-heading" dir="auto"><h3 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">当前的：</font></font></h3><a id="user-content-current" class="anchor" aria-label="永久链接： 当前：" href="#current"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<div class="markdown-heading" dir="auto"><h4 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">流动物理学</font></font></h4><a id="user-content-flow-physics" class="anchor" aria-label="永久链接：流动物理学" href="#flow-physics"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<ul dir="auto">
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">不可压缩的层流（simpleFoam、pimpleFoam）</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">支持各种 RANS、LES 和 DES 湍流模型</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">不可压缩自由表面流（interFoam、多相InterFoam）</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">可压缩浮力流（buoyantSimpleFoam、buoyantPimpleFoam）</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">高速可压缩流 ( </font></font><a href="https://hisa.gitlab.io" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">HiSA</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;"> )</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">多孔区域和多孔挡板</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">基础材料数据库</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">使用潜在求解器进行流初始化</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">任意无源标量传输函数的解</font></font></li>
+</ul>
+<div class="markdown-heading" dir="auto"><h4 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">网格划分</font></font></h4><a id="user-content-meshing" class="anchor" aria-label="永久链接：网格划分" href="#meshing"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<ul dir="auto">
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">带边界层的切割单元笛卡尔网格划分 (cfMesh)</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">带挡板的切割单元笛卡尔网格划分 (snappyHexMesh)</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">使用 Gmsh 进行四面体网格划分，包括转换为多面体双网格</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">网格划分后检查网格</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">支持支持求解器的动态网格自适应</font></font></li>
+</ul>
+<div class="markdown-heading" dir="auto"><h4 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">后处理和监控</font></font></h4><a id="user-content-post-processing-and-monitoring" class="anchor" aria-label="永久链接：后处理和监控" href="#post-processing-and-monitoring"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<ul dir="auto">
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">使用 Paraview 进行后处理</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">对基于力的函数对象（力、力系数）的基本支持</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">对探针的基本支持</font></font></li>
+</ul>
+<div class="markdown-heading" dir="auto"><h4 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">其他特性</font></font></h4><a id="user-content-other-features" class="anchor" aria-label="永久链接：其他功能" href="#other-features"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<ul dir="auto">
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">在 Windows 7-11 和 Linux 上运行</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">单元/回归测试</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">使用可扩展模板结构的案例构建器</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">宏脚本</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">通过 mpiexec &amp; --hostfile 支持分布式并行（集群）运行</font></font></li>
+</ul>
+<div class="markdown-heading" dir="auto"><h3 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">支持的平台</font></font></h3><a id="user-content-platforms-supported" class="anchor" aria-label="永久链接：支持的平台" href="#platforms-supported"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<div class="markdown-heading" dir="auto"><h4 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Linux</font></font></h4><a id="user-content-linux" class="anchor" aria-label="永久链接：Linux" href="#linux"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">可以安装 FreeCAD 和下面列出的先决条件的任何系统。</font></font></p>
+<div class="markdown-heading" dir="auto"><h4 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">视窗</font></font></h4><a id="user-content-windows" class="anchor" aria-label="永久链接：Windows" href="#windows"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Windows 7-11；需要 64 位版本。</font></font></p>
+<div class="markdown-heading" dir="auto"><h4 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">苹果系统</font></font></h4><a id="user-content-macos" class="anchor" aria-label="永久链接：macOS" href="#macos"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">尚未进行广泛测试，但已有成功的报道。请参阅
+</font></font><a href="https://forum.freecadweb.org/viewtopic.php?f=37&amp;t=63782&amp;p=547611#p547578" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">以下论坛帖子</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
+以获取说明。</font></font></p>
+<div class="markdown-heading" dir="auto"><h2 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">入门</font></font></h2><a id="user-content-getting-started" class="anchor" aria-label="永久链接：开始使用" href="#getting-started"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<div class="markdown-heading" dir="auto"><h3 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">先决条件</font></font></h3><a id="user-content-prerequisites" class="anchor" aria-label="永久链接：先决条件" href="#prerequisites"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">CfdOF 工作台依赖于以下外部软件，其中一些可以自动安装（请参阅下面的说明）。</font></font></p>
+<ul dir="auto">
+<li><a href="https://www.freecadweb.org/downloads.php" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">FreeCAD 的最新发布版本（至少版本 0.20.0 / git commit 29177）</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
+或</font></font><a href="https://github.com/FreeCAD/FreeCAD-Bundle/releases/tag/weekly-builds"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">最新开发版本（预发布）</font></font></a></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">OpenFOAM </font></font><a href="http://openfoam.org/download/" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Foundation 版本 9-10</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">或</font></font><a href="http://openfoam.com/download" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">ESI-OpenCFD 版本 2006-2306</font></font></a></li>
+<li><a href="http://www.paraview.org/" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">帕拉维尤</font></font></a></li>
+<li><a href="https://sourceforge.net/projects/cfmesh-cfdof/" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">cfMesh（定制版本更新为使用最新的 OpenFOAM 版本进行编译）</font></font></a></li>
+<li><a href="https://hisa.gitlab.io" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">HiSA（高速空气动力求解器）</font></font></a></li>
+<li><a href="http://gmsh.info/" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Gmsh（版本 2.13 或更高版本）</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;"> - 可选，用于生成四面体网格</font></font></li>
+</ul>
+<div class="markdown-heading" dir="auto"><h3 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">设置 CfdOF 工作台</font></font></h3><a id="user-content-setting-up-the-cfdof-workbench" class="anchor" aria-label="永久链接：设置 CfdOF 工作台" href="#setting-up-the-cfdof-workbench"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<div class="markdown-heading" dir="auto"><h4 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">视窗</font></font></h4><a id="user-content-windows-1" class="anchor" aria-label="永久链接：Windows" href="#windows-1"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
+可以通过分别运行安装程序或将 .7z 存档解压到目录 &lt;FreeCAD-directory&gt; 来获取和安装</font><font style="vertical-align: inherit;">最新
+</font></font><a href="https://www.freecadweb.org/downloads.php" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">版本</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
+或</font></font><a href="https://github.com/FreeCAD/FreeCAD-Bundle/releases/tag/weekly-builds"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">开发的</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">FreeCAD 版本（64 位版本）。在后一种情况下，FreeCAD 可以就地运行 (&lt;FreeCAD-directory&gt;\bin\FreeCAD.exe)。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">CfdOF 本身使用 Addon 管理器安装到 FreeCAD 中：</font></font></p>
+<ul dir="auto">
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">运行 FreeCAD</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">选择工具 |插件管理器...</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">在工作台列表中选择CfdOF，然后单击“安装/更新”</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">重新启动 FreeCAD</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">依赖的安装见下文</font></font></li>
+</ul>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">注意：CfdOF 工作台可以随时通过插件管理器进行更新。</font></font></p>
+<div class="markdown-heading" dir="auto"><h5 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">依赖安装</font></font></h5><a id="user-content-dependency-installation" class="anchor" aria-label="永久链接：依赖安装" href="#dependency-installation"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">可以从 FreeCAD 中的 CfdOF 首选项面板方便地检查和安装依赖项。在 FreeCAD 窗口中，选择编辑 |首选项...并选择“CfdOF”。依赖项可以作为单独的组件安装，也可以作为 Docker 容器的一部分安装（请参阅下面的</font></font><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Docker 容器安装</font></font></strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">部分）。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">OpenFOAM 通过
+</font></font><a href="https://www.openfoam.com/download/install-binary-windows-mingw.php" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">OpenCFD MinGW 包</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">安装，并且</font><font style="vertical-align: inherit;">还支持 OpenFOAM 的</font></font><a href="https://bluecfd.github.io/Core/" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">BlueCFD Core端口。</font></font></a><font style="vertical-align: inherit;"></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">可以使用上述链接手动安装 OpenFOAM，或者单击上述首选项面板中的相关按钮。如果您在 CfdOF 中运行 OpenFOAM 时遇到问题，请按照相关网站上的说明确保安装正常。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">为了与 OpenFOAM 安装正确连接，CfdOF 需要能够写入其安装位置。由于 Windows 用户帐户控制施加的限制，某些用户在使用 C:\Program Files 内的位置时会遇到问题。因此，建议安装到其他位置，最好是在您的主目录中。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">如果使用上述软件包以管理员权限安装 OpenFOAM，则还可以选择安装 Microsoft MPI。如果没有，则需要从</font></font><a href="https://learn.microsoft.com/en-us/message-passing-interface/microsoft-mpi#ms-mpi-downloads" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">此处</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">手动下载并安装它。需要 MPI 才能并行运行。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">将首选项面板中的 OpenFOAM 安装目录设置为 MinGW 包的以“vXXXX”子文件夹（其中 XXXX 是安装的版本号）结尾的安装目录，或 BlueCFD 安装目录。它将在默认安装位置自动检测到。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">通过点击上面的链接或单击“首选项”面板中的相关按钮，可以安装</font><font style="vertical-align: inherit;">任何版本的</font></font><a href="https://www.paraview.org/download/" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">ParaView</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;"> 。将首选项面板中的 ParaView 安装路径设置为 ParaView 安装的“bin”子文件夹中的“paraview.exe”文件。如果留空，将检测常见默认值。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">同样，cfMesh 和 HiSA 可以从“首选项”面板安装。在收到“安装完成”消息之前，请勿将其关闭。请注意，OpenFOAM 安装必须位于可写位置，cfMesh 和 HiSA 才能成功安装。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">选择“检查依赖项”选项将验证是否已成功安装所有先决条件。</font></font></p>
+<div class="markdown-heading" dir="auto"><h4 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Linux</font></font></h4><a id="user-content-linux-1" class="anchor" aria-label="永久链接：Linux" href="#linux-1"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">FreeCAD最新</font></font><a href="https://www.freecadweb.org/downloads.php" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">版本</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
+或</font></font><a href="https://github.com/FreeCAD/FreeCAD-Bundle/releases/tag/weekly-builds"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">开发</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
+版本的AppImages可以直接下载并运行，无需安装。请注意，您必须启用下载文件的执行权限才能运行它。否则，可以从</font></font><a href="https://github.com/FreeCAD/FreeCAD"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">https://github.com/FreeCAD/FreeCAD</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">的源代码构建 FreeCAD </font><font style="vertical-align: inherit;">。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">笔记：</font></font></p>
+<ul dir="auto">
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">通过 Linux 包管理器安装 FreeCAD 会使用本地 Python 安装。因此，您可能需要安装额外的 Python 包才能获得完整功能。依赖性检查器（见下文）可以帮助诊断这一点。</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">请注意，通过某些发行版的包管理器安装的“Snap”容器可能会出现问题，因为它不允许访问系统目录，因此 OpenFOAM 必须安装在用户的主目录中才能从 FreeCAD 运行。</font></font></li>
+</ul>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">由于上述原因，我们推荐 AppImage 作为 Linux 上最强大的安装选项。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">CfdOF 本身使用 Addon 管理器安装到 FreeCAD 中：</font></font></p>
+<ul dir="auto">
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">运行 FreeCAD</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">选择工具 |插件管理器...</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">在工作台列表中选择CfdOF，然后单击“安装/更新”</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">重新启动 FreeCAD</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">依赖的安装见下文</font></font></li>
+</ul>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">注意：CfdOF 工作台可以随时通过插件管理器进行更新。</font></font></p>
+<div class="markdown-heading" dir="auto"><h5 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">依赖安装</font></font></h5><a id="user-content-dependency-installation-1" class="anchor" aria-label="永久链接：依赖安装" href="#dependency-installation-1"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">可以通过 FreeCAD 中的 CFD 首选项面板检查依赖关系，并方便地安装其中一些依赖关系。在 FreeCAD 窗口中，选择编辑 |首选项...并选择“CfdOF”。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">依赖项可以手动安装，也可以作为 docker 容器的一部分安装（请参阅下面的 Docker 容器安装）。可以</font><font style="vertical-align: inherit;">使用上面的链接或您的发行版的软件包管理器对 OpenFOAM（ </font></font><a href="https://openfoam.com/download" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">OpenCFD</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">或</font></font><a href="https://openfoam.org/download/" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Foundation</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
+版本）、</font></font><a href="http://www.paraview.org/" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Paraview</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">和</font></font><a href="http://gmsh.info/" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Gmsh</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;"> （可选）进行手动安装。</font><font style="vertical-align: inherit;">但请注意，某些 Linux 发行版中捆绑的 OpenFOAM 软件包可能已过时或不完整；例如，标准 Debian 和 Ubuntu 软件包不包含构建命令“wmake”，因此不能与可选组件“HiSA”和“cfMesh”一起使用。因此，我们建议安装通过上述官方网站提供的软件包。请确保安装可用的“开发”包（通常以后缀“-devel”或“-dev”命名），以确保可以使用“wmake”编译可选组件“HiSA”和“cfMesh”。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">在首选项面板中设置 OpenFOAM 安装目录 - 典型安装位置的示例为 /usr/lib/openfoam/openfoam2306、/opt/openfoam10 或 /home/user/OpenFOAM/OpenFOAM-10.x（通常会自动检测到）默认安装位置）。请注意，如果您在启动 FreeCAD 之前已经加载了所需的 OpenFOAM 环境，则安装目录应留空。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">cfMesh 和 HiSA 可以使用上述的“首选项”面板进行安装，如果您自己还没有这样做，也可以在 OpenFOAM 安装中从其源代码下载和构建。请注意，这是一个漫长的过程。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">选择“检查依赖项”选项将验证是否已成功安装所有先决条件。</font></font></p>
+<div class="markdown-heading" dir="auto"><h4 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Docker 容器安装</font></font></h4><a id="user-content-docker-container-install" class="anchor" aria-label="永久链接：Docker 容器安装" href="#docker-container-install"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Docker 容器提供了一种为 Windows 和 Linux 提供预编译程序包的便捷方式。 macOS 也受支持，但需要帮助来设置容器。请在</font></font><a href="https://forum.freecadweb.org/viewforum.php?f=37" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">论坛</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">留言</font><font style="vertical-align: inherit;">。</font></font></p>
+<div class="markdown-heading" dir="auto"><h5 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Windows 上的 Docker</font></font></h5><a id="user-content-docker-on-windows" class="anchor" aria-label="永久链接：Windows 上的 Docker" href="#docker-on-windows"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Windows 的首选 docker 运行时是通过</font></font><a href="https://podman.io/" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">podman</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">，因为目前这提供了快速的文件系统集成。
+</font><font style="vertical-align: inherit;">也可以使用</font></font><a href="https://www.docker.com/products/docker-desktop/" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Docker Desktop 。</font></font></a><font style="vertical-align: inherit;"></font></p>
+<ol dir="auto">
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">安装</font></font><a href="https://github.com/containers/podman/releases/download/v4.2.1/podman-v4.2.1.msi"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">podman</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">（或</font></font><a href="https://www.docker.com/products/docker-desktop/" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">docker Desktop</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">）。</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">如果使用 podman，请打开 cmd 窗口并发出以下命令：
+</font></font><ul dir="auto">
+<li><code>podman machine init</code></li>
+<li><code>podman machine start</code></li>
+<li><code>podman machine set --rootful</code></li>
+</ul>
+</li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">编辑 → 首选项 → CfdOF：按</font></font><em><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">安装 Paraview</font></font></em><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">按钮。</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">编辑 → 首选项 → CfdOF：选择</font></font><em><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">使用 docker</font></font></em><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">。</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">按</font></font><em><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">安装 Docker 容器</font></font></em><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">按钮。无需安装 gmsh、cfmesh 和 HISA，因为它们包含在 docker 映像中。</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">如果使用 podman，可以启用快速 WSL 文件系统集成：
+</font></font><ul dir="auto">
+<li><font style="vertical-align: inherit;"></font><code>cfdof</code><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">在 podman 创建的以下 firectory 中
+</font><font style="vertical-align: inherit;">创建一个新的子目录（例如）：</font></font><code>\\wsl$\podman-machine-default\home\user</code></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">在 cfdof 首选项页面中，按上述方式设置默认输出目录：
+</font></font><code>\\wsl$\podman-machine-default\home\user\cfdof</code></li>
+</ul>
+</li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">按</font></font><em><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">运行依赖性检查器</font></font></em><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">按钮。</font></font></li>
+</ol>
+<div class="markdown-heading" dir="auto"><h5 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Linux 上的 Docker</font></font></h5><a id="user-content-docker-on-linux" class="anchor" aria-label="永久链接：Linux 上的 Docker" href="#docker-on-linux"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<ol dir="auto">
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">使用这些</font></font><a href="https://www.linuxtechi.com/install-docker-engine-on-debian/" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">说明</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">（或类似说明）安装 docker。</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">按照您的发行版的软件包安装说明安装 paraview（例如</font></font><code>sudo apt-get install paraview</code><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">在 debian 上）。</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">编辑 → 首选项 → CfdOF：选择</font></font><em><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">使用 docker</font></font></em><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">。</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">按</font></font><em><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">安装 Docker 容器</font></font></em><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">按钮。无需安装 gmsh、cfmesh 和 HISA，因为它们包含在 docker 映像中。</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">按</font></font><em><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">运行依赖性检查器</font></font></em><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">按钮。</font></font></li>
+</ol>
+<div class="markdown-heading" dir="auto"><h2 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">文档</font></font></h2><a id="user-content-documentation" class="anchor" aria-label="永久链接：文档" href="#documentation"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">目前，除了本自述文件之外，还没有 CfdOF 的正式文档。但是， </font></font><a href="https://github.com/jaheyns/cfdof"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">CfdOF 工作台目录</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">的“Demos”文件夹内提供了演示案例
+</font><font style="vertical-align: inherit;">。这些旨在提供功能和最佳实践的基本概述。这些示例是通过加载并执行“Demos”目录中各个子目录中以“.FCMacro”结尾的宏文件来运行的。如果有多个编号文件，则应按顺序运行这些文件，并旨在逐步演示案例的设置方式。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"></font><a href="https://forum.freecadweb.org/viewforum.php?f=37" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">可以在CfdOF 专用 FreeCAD 论坛</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">寻求社区帮助
+，并且可以在</font></font><a href="https://forum.freecadweb.org/viewtopic.php?f=37&amp;t=33492#p280359" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">以下论坛帖子</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">中找到各种第三方文档的列表
+</font><font style="vertical-align: inherit;">。</font></font></p>
+<div class="markdown-heading" dir="auto"><h3 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">常问问题</font></font></h3><a id="user-content-faq" class="anchor" aria-label="永久链接：常见问题解答" href="#faq"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">问：我必须创建一个防水的几何形状吗？</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"></font><em><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">答：如果使用笛卡尔网格生成器snappyHexMesh</font></font></em><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">和</font></font><em><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">cfMesh</font></font></em><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">，则不需要这样做</font><font style="vertical-align: inherit;">。您可以使用壳和化合物而不是创建实体，只要被网格化的化合物中的形状集合阻挡了所需的体积。小于网格间距的间隙也是允许的。</font></font></p>
+<div class="markdown-heading" dir="auto"><h2 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">反馈</font></font></h2><a id="user-content-feedback" class="anchor" aria-label="永久链接：反馈" href="#feedback"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<div class="markdown-heading" dir="auto"><h3 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">报告错误</font></font></h3><a id="user-content-reporting-bugs" class="anchor" aria-label="永久链接：报告错误" href="#reporting-bugs"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"></font><a href="https://forum.freecadweb.org/viewforum.php?f=37" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">请在CfdOF FreeCAD 论坛</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">上讨论问题</font><font style="vertical-align: inherit;">
+以获得社区帮助。可以在</font></font><a href="https://github.com/jaheyns/cfdof"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Github 项目网站</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">上报告错误</font><font style="vertical-align: inherit;">。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">请首先阅读</font></font><a href="https://forum.freecadweb.org/viewtopic.php?f=37&amp;t=33492#p280359" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">报告错误的指南</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
+，以便提供足够的信息。</font></font></p>
+<div class="markdown-heading" dir="auto"><h2 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">发展</font></font></h2><a id="user-content-development" class="anchor" aria-label="永久链接： 发展" href="#development"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">如果您想参与CfdOF的开发，请参阅</font></font><a href="/jaheyns/CfdOF/blob/master/CONTRIBUTING.md"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">贡献指南</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
+和</font></font><a href="/jaheyns/CfdOF/blob/master/ROADMAP.md"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">路线图</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">。</font></font></p>
+<div class="markdown-heading" dir="auto"><h2 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">致谢</font></font></h2><a id="user-content-acknowledgements" class="anchor" aria-label="永久链接：致谢" href="#acknowledgements"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<div class="markdown-heading" dir="auto"><h3 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">资金</font></font></h3><a id="user-content-funding" class="anchor" aria-label="永久链接：资金" href="#funding"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"></font><a href="http://www.eskom.co.za" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">这一发展是通过Eskom Holdings SOC Ltd</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">
+和</font></font><a href="https://www.csir.co.za" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">科学与工业研究委员会</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">（南非）</font><font style="vertical-align: inherit;">的初始资助实现的。</font></font></p>
+<div class="markdown-heading" dir="auto"><h3 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">贡献者</font></font></h3><a id="user-content-contributors" class="anchor" aria-label="永久链接：贡献者" href="#contributors"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<ul dir="auto">
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Oliver Oxtoby（CSIR，2016-2018；私人 2019-）</font></font><a href="mailto:oliveroxtoby@gmail.com"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">oliveroxtoby@gmail.com</font></font></a></li>
+<li><font style="vertical-align: inherit;"><a href="mailto:jaheyns@gmail.com"><font style="vertical-align: inherit;">约翰·</font></a><font style="vertical-align: inherit;">海恩斯（CSIR，2016-2018）jaheyns@gmail.com</font></font><a href="mailto:jaheyns@gmail.com"><font style="vertical-align: inherit;"></font></a></li>
+<li><font style="vertical-align: inherit;"><a href="mailto:alfredbogaers@gmail.com"><font style="vertical-align: inherit;">阿尔弗雷德·</font></a><font style="vertical-align: inherit;">博加尔（CSIR，2016-2018）alfredbogaers@gmail.com</font></font><a href="mailto:alfredbogaers@gmail.com"><font style="vertical-align: inherit;"></font></a></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">乔纳森·伯格 (2022)</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">夏庆丰 (2015)</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">托马斯·施拉德 (2017-) </font></font><a href="mailto:info@schraderundschrader.de"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">info@schraderundschrader.de</font></font></a></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">迈克尔·欣德利 (2016)</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">马克·麦肯齐（CNF，2022）</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">凯蒂·阿克马尔 (2022) [论坛：@KAKM]</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">阿德里安·因绍拉尔德 (2022)</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">克劳斯·森布里茨基 (2017)</font></font></li>
+</ul>
+<div class="markdown-heading" dir="auto"><h3 tabindex="-1" class="heading-element" dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">奉献精神</font></font></h3><a id="user-content-dedication" class="anchor" aria-label="永久链接： 奉献" href="#dedication"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">CfdOF 致力于纪念迈克尔·欣德利 (Michael Hindley)。正是由于他对 FreeCAD 和开源软件不可抑制的热情，这个工作台才得以存在。安息。</font></font></p>
+</article></div>
